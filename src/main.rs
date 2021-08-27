@@ -13,5 +13,9 @@ fn main() -> Result<()> {
         println!("add_receipt() error: {}", e);
     }
 
+    if let Err(e) = database::add_ledger(&conn, "Jorge", &15, "Paula") {
+        println!("add_ledger() error: {}", e);
+    }
+
     Ok(())
 }

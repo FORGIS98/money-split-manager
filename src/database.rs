@@ -35,3 +35,13 @@ pub fn add_receipt(conn: &Connection, payer: &str, amount: &u32, description: &s
 
     Ok(())
 }
+
+pub fn add_ledger(conn: &Connection, borrower: &str, amount: &u32, owner: &str) -> Result<()> {
+
+    conn.execute(
+        "INSERT INTO ledger (borrower, amount, owner) VALUES (?1, ?2, ?3)", 
+        params![borrower, amount, owner]
+    )?;
+
+    Ok(())
+}
