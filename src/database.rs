@@ -1,5 +1,21 @@
 use rusqlite::{params, Connection, Result};
 
+#[derive(Debug)]
+struct Receipt {
+    id: i32,
+    payer: String,
+    amount: i32,
+    description: String,
+}
+
+#[derive(Debug)]
+struct Ledger {
+    id: i32,
+    borrower: String,
+    amount: i32,
+    owner: String,
+}
+
 /// Creates two tables, **receipt** to save all the expenses
 /// and **ledger** to know who owes money to whom.
 pub fn create_tables(conn: &Connection) -> Result<()> {
@@ -27,21 +43,55 @@ pub fn create_tables(conn: &Connection) -> Result<()> {
 }
 
 pub fn add_receipt(conn: &Connection, payer: &str, amount: &u32, description: &str) -> Result<()> {
-
     conn.execute(
-        "INSERT INTO receipt (payer, amount, description) VALUES (?1, ?2, ?3)", 
-        params![payer, amount, description]
+        "INSERT INTO receipt (payer, amount, description) VALUES (?1, ?2, ?3)",
+        params![payer, amount, description],
     )?;
 
     Ok(())
 }
 
 pub fn add_ledger(conn: &Connection, borrower: &str, amount: &u32, owner: &str) -> Result<()> {
-
     conn.execute(
-        "INSERT INTO ledger (borrower, amount, owner) VALUES (?1, ?2, ?3)", 
-        params![borrower, amount, owner]
+        "INSERT INTO ledger (borrower, amount, owner) VALUES (?1, ?2, ?3)",
+        params![borrower, amount, owner],
     )?;
+
+    Ok(())
+}
+
+pub fn print_receipt(conn: &Connection) -> Result<()> {
+    let mut stmt = conn.prepare("SELECT * FROM receipt;")?;
+    let rows = stmt.query_map([], |row| {
+        Ok(Receipt {
+            id: row.get(0)?,
+            payer: row.get(1)?,
+            amount: row.get(2)?,
+            description: row.get(3)?,
+        })
+    })?;
+
+    for row in rows {
+        println!("{:?}", row.unwrap());
+    }
+
+    Ok(())
+}
+
+pub fn print_ledger(conn: &Connection) -> Result<()> {
+    let mut stmt = conn.prepare("SELECT * FROM ledger;")?;
+    let rows = stmt.query_map([], |row| {
+        Ok(Ledger {
+            id: row.get(0)?,
+            borrower: row.get(1)?,
+            amount: row.get(2)?,
+            owner: row.get(3)?,
+        })
+    })?;
+
+    for row in rows {
+        println!("{:?}", row.unwrap());
+    }
 
     Ok(())
 }

@@ -73,7 +73,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     } else {
         // Show the user a list of available data_bases
         // and let him choose one of them
-        println!("So this are all the available databases, choose one of them please, (of course, just give me the number): ");
+        println!("So this are all the available managers, choose one of them please, (of course, just give me the number): ");
 
         let mut all_managers = HashMap::new();
 
@@ -89,10 +89,9 @@ fn main() -> Result<(), Box<dyn Error>> {
 
         loop {
             if all_managers.len() == 0 {
-                println!(
+                panic!(
                     "There is no managers here...they are maybe on vacation...as I wish I was..."
                 );
-                break;
             }
 
             let mut all_user_interaction = String::new();
@@ -132,6 +131,54 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     if let Err(e) = database::add_ledger(&conn, "Jorge", &15, "Paula") {
         println!("add_ledger() error: {}", e);
+    }
+
+    println!(
+        "Now that you have a manager, what do you need from him? (Don't bother him if you don't have to, I like him): "
+    );
+
+    println!(""); // Air :D
+
+    println!(
+        "1: Print al receipts\n
+         2: Add receipt\n
+         3: Print ledger\n
+         So, choose a number: "
+    );
+
+    println!(""); // Air :D
+
+    let mut number: i32;
+    loop {
+        let mut all_user_interaction = String::new();
+        io::stdin()
+            .read_line(&mut all_user_interaction)
+            .expect("Failed to read line...to bad :/");
+
+        println!(""); // Air :D
+
+        number = match all_user_interaction.trim().parse() {
+            Ok(num) => num,
+            Err(_) => {
+                println!("...I said a number! (They never learn...)");
+                continue;
+            }
+        };
+
+        if number < 1 || number > 3 {
+            println!("OMG! Are you stupid? I need a number from the list: ");
+            continue;
+        }
+        break;
+    }
+
+    match number {
+        1 => database::print_receipt(&conn).unwrap(),
+        2 => {},
+        3 => database::print_ledger(&conn).unwrap(),
+        _ => {
+            panic!("This shouldn't explode :/");
+        }
     }
 
     Ok(())
