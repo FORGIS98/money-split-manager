@@ -4,7 +4,7 @@ use rusqlite::{params, Connection, Result};
 struct Receipt {
     id: i32,
     payer: String,
-    amount: i32,
+    amount: f32,
     description: String,
 }
 
@@ -12,7 +12,7 @@ struct Receipt {
 struct Ledger {
     id: i32,
     borrower: String,
-    amount: i32,
+    amount: f32,
     owner: String,
 }
 
@@ -23,7 +23,7 @@ pub fn create_tables(conn: &Connection) -> Result<()> {
         "CREATE TABLE IF NOT EXISTS receipt (
             id INTEGER PRIMARY KEY,
             payer TEXT NOT NULL,
-            amount INTEGER NOT NULL,
+            amount DECIMAL NOT NULL,
             description TEXT NOT NULL
         )",
         [],
@@ -33,7 +33,7 @@ pub fn create_tables(conn: &Connection) -> Result<()> {
         "CREATE TABLE IF NOT EXISTS ledger (
             id INTEGER PRIMARY KEY,
             borrower TEXT NOT NULL,
-            amount INTEGER NOT NULL,
+            amount DECIMAL NOT NULL,
             owner TEXT NOT NULL
         )",
         [],
@@ -42,7 +42,7 @@ pub fn create_tables(conn: &Connection) -> Result<()> {
     Ok(())
 }
 
-pub fn add_receipt(conn: &Connection, payer: &str, amount: &u32, description: &str) -> Result<()> {
+pub fn add_receipt(conn: &Connection, payer: &str, amount: &f32, description: &str) -> Result<()> {
     conn.execute(
         "INSERT INTO receipt (payer, amount, description) VALUES (?1, ?2, ?3)",
         params![payer, amount, description],
@@ -51,7 +51,7 @@ pub fn add_receipt(conn: &Connection, payer: &str, amount: &u32, description: &s
     Ok(())
 }
 
-pub fn add_ledger(conn: &Connection, borrower: &str, amount: &u32, owner: &str) -> Result<()> {
+pub fn add_ledger(conn: &Connection, borrower: &str, amount: &f32, owner: &str) -> Result<()> {
     conn.execute(
         "INSERT INTO ledger (borrower, amount, owner) VALUES (?1, ?2, ?3)",
         params![borrower, amount, owner],

@@ -1,5 +1,5 @@
 use rusqlite::Connection;
-use std::{collections::HashMap, error::Error, fs, io, io::ErrorKind, path::Path};
+use std::{collections::HashMap, error::Error, fs, io, io::ErrorKind, io::Write, path::Path};
 
 mod database;
 
@@ -14,12 +14,15 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     // First conversation
     println!(
-        "WELCOME to money-split-manager, this not to friendly terminal experience is going to try to walk you through the app :D");
+        "\n\nWELCOME to money-split-manager, this not to friendly terminal experience is going to try to walk you through the app :D"
+    );
 
     println!(""); // Air :D
 
-    println!(
-        "So, first things first, do you want to create a new manager? Write \"yes\" or \"no\" please:");
+    print!(
+        "So, first things first, do you want to create a new manager? Write \"yes\" or \"no\" please: "
+    );
+    io::stdout().flush().unwrap();
 
     let new_manager: bool;
     loop {
@@ -40,7 +43,8 @@ fn main() -> Result<(), Box<dyn Error>> {
             new_manager = false;
             break;
         } else {
-            print!("Was it so hard to anser \"yes\" or \"no\"? My god..., try again :/\n");
+            print!("Was it so hard to answer \"yes\" or \"no\"? My god..., try again: ");
+            io::stdout().flush().unwrap();
         }
     }
 
@@ -48,7 +52,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     let conn: Connection;
     if new_manager {
         // User wants to create a new data_base
-        println!("Nice, a new manager, I see you like to keep things organized. Give the manager a name, be careful, I will not care if you misspell him: ");
+        print!("Nice, a new manager, I see you like to keep things organized. Give the manager a name, be careful, I will not care if you misspell him: ");
+        io::stdout().flush().unwrap();
 
         loop {
             let mut all_user_interaction = String::new();
@@ -73,7 +78,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     } else {
         // Show the user a list of available data_bases
         // and let him choose one of them
-        println!("So this are all the available managers, choose one of them please, (of course, just give me the number): ");
+        println!("So, this are all the available managers, choose one of them please, (of course, just give me the number): ");
 
         let mut all_managers = HashMap::new();
 
@@ -125,26 +130,12 @@ fn main() -> Result<(), Box<dyn Error>> {
         println!("create_tables() error: {}", e);
     }
 
-    if let Err(e) = database::add_receipt(&conn, "Paula", &30, "Pizza") {
-        println!("add_receipt() error: {}", e);
-    }
-
-    if let Err(e) = database::add_ledger(&conn, "Jorge", &15, "Paula") {
-        println!("add_ledger() error: {}", e);
-    }
-
-    println!(
-        "Now that you have a manager, what do you need from him? (Don't bother him if you don't have to, I like him): "
-    );
+    println!("Now that you have a manager, what do you need from him? (Don't bother him if you don't have to, I don't want to loose my time): ");
 
     println!(""); // Air :D
 
-    println!(
-        "1: Print al receipts\n
-         2: Add receipt\n
-         3: Print ledger\n
-         So, choose a number: "
-    );
+    print!("1: Print al receipts\n2: Add receipt\n3: Print ledger\n\nSo, choose a number: ");
+    io::stdout().flush().unwrap();
 
     println!(""); // Air :D
 
@@ -160,13 +151,15 @@ fn main() -> Result<(), Box<dyn Error>> {
         number = match all_user_interaction.trim().parse() {
             Ok(num) => num,
             Err(_) => {
-                println!("...I said a number! (They never learn...)");
+                print!("...I said a number! (They never learn...): ");
+                io::stdout().flush().unwrap();
                 continue;
             }
         };
 
         if number < 1 || number > 3 {
-            println!("OMG! Are you stupid? I need a number from the list: ");
+            print!("OMG! Are you stupid? I need a number from the list: ");
+            io::stdout().flush().unwrap();
             continue;
         }
         break;
@@ -174,7 +167,12 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     match number {
         1 => database::print_receipt(&conn).unwrap(),
-        2 => {},
+        2 => {
+            println!(
+                "Okay, let's add a receipt, I need you to write the next information separated with a semicolon \";\". \nFirst I need to know who has paid the bill, then I need the amount and finally a description. I need the 3 things. Here is an example: \n\nMr.Rust;34.94;Fruit, drinks and yogurts. \n\nI hope it is clear :)\n"
+            );
+            add_new_receipt(&conn)
+        }
         3 => database::print_ledger(&conn).unwrap(),
         _ => {
             panic!("This shouldn't explode :/");
@@ -182,4 +180,46 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
 
     Ok(())
+}
+
+fn add_new_receipt(conn: &Connection) {
+    print!("Enter a receipt: ");
+    io::stdout().flush().unwrap();
+    loop {
+        let mut all_user_interaction = String::new();
+        io::stdin()
+            .read_line(&mut all_user_interaction)
+            .expect("Failed to read line...to bad :/");
+        let mut all_user_interaction = all_user_interaction.trim().split(";");
+
+        let payer: &str = all_user_interaction.next().unwrap();
+        let amount: f32 = all_user_interaction.next().unwrap().parse().unwrap();
+        let description: &str = all_user_interaction.next().unwrap();
+
+        if let Err(e) = database::add_receipt(conn, payer, &amount, description) {
+            println!("add_receipt() error: {}", e);
+        }
+
+        print!("Do you want to add a new receipt? Write \"yes\" or \"no\" please: ");
+        io::stdout().flush().unwrap();
+
+        let mut all_user_interaction = String::new();
+        io::stdin()
+            .read_line(&mut all_user_interaction)
+            .expect("Failed to read line...to bad :/");
+
+        println!(""); // Air :D
+
+        all_user_interaction.make_ascii_lowercase();
+        let all_user_interaction: &str = all_user_interaction.trim();
+
+        if all_user_interaction.eq("yes") {
+            continue;
+        } else if all_user_interaction.eq("no") {
+            break;
+        } else {
+            print!("Are you using your brain? Just write \"yes\" or \"no\" please: ");
+            io::stdout().flush().unwrap();
+        }
+    }
 }
